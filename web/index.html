@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusDesk — Exam Hall Allocator & Invigilator Console</title>
+  <style>
+    body{margin:0;font-family:-apple-system,sans-serif;background:#080c14;color:#e6edf3}
+    header{background:#111827;border-bottom:1px solid #1f2d44;padding:15px 26px;display:flex;justify-content:space-between;align-items:center}
+    h1{margin:0;font-size:20px;color:#818cf8}.container{max-width:1280px;margin:20px auto;padding:0 20px}
+    .desk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}
+    .desk{background:#111827;border:1px solid #1f2d44;border-radius:10px;padding:10px;cursor:pointer}
+    .btn{background:#818cf8;color:#090d1f;border:none;padding:8px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+  </style>
+</head>
+<body>
+  <header><h1>CampusDesk · Anti-Cheating Exam Hall Allocator</h1><button class="btn" onclick="fetch('/api/allocate',{method:'POST'}).then(load)">↻ Re-Allocate</button></header>
+  <div class="container"><div id="stats"></div><div class="desk-grid" id="grid"></div></div>
+  <script>
+    async function load(){
+      const d = await (await fetch('/api/state')).json();
+      document.getElementById('stats').innerHTML = `Allocated: <strong>${d.metrics.allocated}</strong> | Adjacency Conflicts: <strong style="color:#22c55e">${d.metrics.conflicts}</strong> | Present: <strong>${d.metrics.present}</strong>`;
+      document.getElementById('grid').innerHTML = d.students.filter(s=>s.hallCode==='HALL-A').map(s=>`<div class="desk" onclick="mark('${s.regNo}')"><small>${s.seatLabel} · ${s.subjectCode}</small><div style="font-weight:800;margin:4px 0">${s.name}</div><small>${s.regNo} · ${s.status}</small></div>`).join('');
+    }
+    async function mark(regNo){ await fetch('/api/attendance',{method:'POST',body:JSON.stringify({regNo,status:'PRESENT',remarks:'Verified'})}); load(); }
+    load();
+  </script>
+</body>
+</html>
